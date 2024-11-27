@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.secret_key = "sua_chave_secreta"  # Para mensagens flash
 
 # Configurações do Blob da Vercel
-VERCEL_BLOB_API_URL = "https://6i6rloj4xfafhuvw.public.blob.vercel-storage.com"
+VERCEL_BLOB_API_URL = "https://6i6rloj4xfafhuvw.public.blob.vercel-storage.com/put"  # URL de PUT
 VERCEL_BLOB_TOKEN = "store_6I6Rloj4xFaFhUVw"
 HEADERS = {"Authorization": f"Bearer {VERCEL_BLOB_TOKEN}"}
 
@@ -19,11 +19,9 @@ DB_CONFIG = {
     "port": "5432"
 }
 
-
 @app.route('/')
 def index():
     return render_template('index.html')
-
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -40,34 +38,36 @@ def upload():
 
     file_path = f"uploads/{foto.filename}"
     try:
-        # Faz o upload da imagem para o Blob
-        file_content = foto.read()
-        response = requests.post(
+        # Faz o upload da imagem para o Blob com o método PUT
+        files = {'file': (foto.filename, foto.stream, foto.mimetype)}
+        response = requests.put(
             VERCEL_BLOB_API_URL,
-            json={
-                "path": file_path,
-                "content": file_content.decode('latin1'),
-                "access": "public",
-            },
             headers=HEADERS,
+            files=files,
+            data={"path": file_path, "access": "public"}
         )
 
+        # Verificar se a conexão com o Blob foi bem-sucedida
         if response.status_code != 200:
-            flash("Erro ao fazer upload da foto.")
+            flash(f"Erro ao fazer upload da foto para o Blob: {response.text}")
             return redirect(url_for('index'))
 
         # URL pública do Blob
         blob_url = response.json().get("url")
 
-        # Conecta ao banco de dados e salva o nome e URL
-        conn = psycopg2.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-        query = "INSERT INTO pessoa (nome, foto) VALUES (%s, %s)"
-        cursor.execute(query, (nome, blob_url))
-        conn.commit()
-        conn.close()
+        # Conectar ao banco de dados e salvar o nome e URL
+        try:
+            conn = psycopg2.connect(**DB_CONFIG)
+            cursor = conn.cursor()
+            query = "INSERT INTO pessoa (nome, foto) VALUES (%s, %s)"
+            cursor.execute(query, (nome, blob_url))
+            conn.commit()
+            conn.close()
+            flash("Dados salvos com sucesso!")
+        except Exception as db_error:
+            flash(f"Erro ao conectar com o banco de dados: {str(db_error)}")
+            return redirect(url_for('index'))
 
-        flash("Dados salvos com sucesso!")
         return redirect(url_for('index'))
     except Exception as e:
         flash(f"Erro interno: {str(e)}")

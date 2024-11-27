@@ -36,16 +36,14 @@ def upload():
         flash("Nome e foto são obrigatórios!")
         return redirect(url_for('index'))
 
-    # Faz o upload da foto para o Blob Storage
+    # Faz o upload da foto para o Blob Storage (sem tentar decodificar como utf-8)
     file_path = f"uploads/{foto.filename}"  # Caminho no bucket
     try:
+        # Envia a imagem como binário (sem usar .decode('utf-8'))
         response = requests.post(
             f"{VERCEL_BLOB_API_URL}/put",
-            json={
-                "path": file_path,
-                "content": foto.read().decode('utf-8'),
-                "access": "public",
-            },
+            files={"file": (foto.filename, foto.stream, foto.content_type)},
+            data={"path": file_path, "access": "public"},
             headers=HEADERS,
         )
         if response.status_code != 200:

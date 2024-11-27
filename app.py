@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.secret_key = "sua_chave_secreta"  # Para mensagens flash
 
 # Configurações do Blob da Vercel
-VERCEL_BLOB_API_URL = "https://api.vercel.com/v1/blob/put"
+VERCEL_BLOB_API_URL = "https://6i6rloj4xfafhuvw.public.blob.vercel-storage.com"
 VERCEL_BLOB_TOKEN = "store_6I6Rloj4xFaFhUVw"
 HEADERS = {"Authorization": f"Bearer {VERCEL_BLOB_TOKEN}"}
 
@@ -16,7 +16,7 @@ DB_CONFIG = {
     "user": "postgres.sguugivenyucuyfaegcl",
     "password": "uJ41uOtbuqQJXzV2",
     "database": "postgres",
-    "port": "6543"
+    "port": "5432"
 }
 
 

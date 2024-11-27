@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for, flash
 import requests
-import mysql.connector
+import psycopg2
 
 app = Flask(__name__)
 app.secret_key = "sua_chave_secreta"  # Para mensagens flash
@@ -10,13 +10,13 @@ VERCEL_BLOB_API_URL = "https://6i6rloj4xfafhuvw.public.blob.vercel-storage.com" 
 VERCEL_BLOB_TOKEN = "store_6I6Rloj4xFaFhUVw"  # Substitua pelo token fornecido pela Vercel
 HEADERS = {"Authorization": f"Bearer {VERCEL_BLOB_TOKEN}"}  # Autenticação na API
 
-# Configurações do Banco de Dados
+# Configurações do Banco de Dados PostgreSQL (Supabase)
 DB_CONFIG = {
     "host": "aws-0-sa-east-1.pooler.supabase.com",
     "user": "postgres.sguugivenyucuyfaegcl",
     "password": "uJ41uOtbuqQJXzV2",
     "database": "postgres",
-    "port" : "6543"
+    "port": "6543"
 }
 
 
@@ -55,8 +55,8 @@ def upload():
         # URL pública da foto
         blob_url = response.json().get("url")
 
-        # Conectar ao banco de dados e salvar os dados
-        conn = mysql.connector.connect(**DB_CONFIG)
+        # Conectar ao banco de dados PostgreSQL (Supabase) e salvar os dados
+        conn = psycopg2.connect(**DB_CONFIG)
         cursor = conn.cursor()
         query = "INSERT INTO pessoa (nome, foto) VALUES (%s, %s)"
         cursor.execute(query, (nome, blob_url))
